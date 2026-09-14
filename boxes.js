@@ -173,7 +173,8 @@ window.onload = function init() {
 
 
 	//Set up projection matrix
-	projectionMatrix=perspective(45.0, canvas.width/canvas.height, 0.1, 100.0);
+	//projectionMatrix=perspective(45.0, canvas.width/canvas.height, 0.1, 100.0);
+	projectionMatrix=ortho(-3.0, 3.0, -3.0, 3.0, 0.1, 20.0)
 	gl.uniformMatrix4fv( projectionMatrixLoc, false, flatten(projectionMatrix) );
 
     render();
@@ -194,6 +195,12 @@ function render() {
 
 	modelViewMatrix = lookAt(eye,at,up);
 	//modelViewMatrix = translate(0,0,-10);
+
+    //top view
+    //modelViewMatrix = mult(modelViewMatrix,rotateX(90.0))
+    //new view
+    modelViewMatrix = mult(modelViewMatrix,rotateX(45.0))
+    modelViewMatrix = mult(modelViewMatrix,rotateY(45.0))
 
 	//axis 
     gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );

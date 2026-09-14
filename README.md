@@ -10,3 +10,5 @@ submission for Ethan Bostick
 b. Similarly changing the width affects the x-axis in the same way, shinking it down to fit within the new dimensions but keeping the relative length/size the same.
 
 c. changing the aspect ratio to width/height makes the displayed axis remain the same size relative to each other, rather than the size being relative to just the dimension of width or height.
+
+10) To keep the x and y axis' original orientations the same I would rotate the camera instead of the scene geometry.
