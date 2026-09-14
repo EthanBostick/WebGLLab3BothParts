@@ -10,6 +10,7 @@ var shapes = {
    wireCube: {points:[], colors:[], start:0, size:0, type: 0},
    solidCube: {points:[], colors:[], start:0, size:0, type: 0},
    axes: {points:[], colors:[], start:0, size:0, type: 0},
+   coloredWireCube: {points:[], colors:[], start:0, size:0, type: 0}
 };
 
 //Variables for Transformation Matrices
@@ -92,6 +93,8 @@ for (var i =0; i < wireCubeLookups.length; i++)
 {
    shapes.wireCube.points.push(cubeVerts[wireCubeLookups[i]]);
    shapes.wireCube.colors.push(white);
+   shapes.coloredWireCube.points.push(cubeVerts[wireCubeLookups[i]]);
+   shapes.coloredWireCube.colors.push(green); // Apply new color here
 }
 
 //Expand Solid Cube data: each face will be a different color so you can see
@@ -144,7 +147,7 @@ window.onload = function init() {
 	loadShape(shapes.wireCube, gl.LINE_STRIP);
 	loadShape(shapes.solidCube, gl.TRIANGLES);
 	loadShape(shapes.axes, gl.LINES);
-
+	loadShape(shapes.coloredWireCube, gl.LINE_STRIP);
 
 	// Load the data into GPU data buffers and
 	// Associate shader attributes with corresponding data buffers
@@ -191,8 +194,23 @@ function render() {
 
 	modelViewMatrix = lookAt(eye,at,up);
 	//modelViewMatrix = translate(0,0,-10);
+
+	//axis 
     gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
-	
 	gl.drawArrays(shapes.axes.type, shapes.axes.start, shapes.axes.size);	
+
+	//Draw first wireframe cube translated to (1, 0, 0)
+    var cube1Matrix = mult(modelViewMatrix, translate(1.0, 0.0, 0.0));
+    gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(cube1Matrix) );
+    gl.drawArrays(shapes.wireCube.type, shapes.wireCube.start, shapes.wireCube.size);
+
+    // 2. Draw second colored wireframe cube translated to (1, 1, 0) and rotated 45 degrees
+    var cube2Matrix = mult(modelViewMatrix, translate(1.0, 1.0, 0.0));
+    cube2Matrix = mult(cube2Matrix, rotateY(45.0)); 
+    
+    gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(cube2Matrix) );
+
+    gl.drawArrays(shapes.coloredWireCube.type, shapes.coloredWireCube.start, shapes.coloredWireCube.size);
+
     requestAnimationFrame(render);
 }
