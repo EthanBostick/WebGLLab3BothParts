@@ -18,7 +18,7 @@ var projectionMatrix  = mat4();
 var modelViewMatrixLoc, projectionMatrixLoc;
 
 //Model state variables
-var shoulder = 0, elbow = 0;
+var shoulder = 0, elbow = 0, fingerAngle = 0;
 
 
 //----------------------------------------------------------------------------
@@ -222,6 +222,11 @@ function animate()
 function render() {
 	gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 	
+   var eye = vec3(0.0, 1.0, 10.0);
+   var at = vec3(0.0, 0.0, 0.0);
+   var up = vec3(0.0, 1.0, 0.0);
+   modelViewMatrix = lookAt(eye, at, up);
+
    var armShape = shapes.wireCube;
    var matStack = [];
 	
@@ -244,22 +249,54 @@ function render() {
 
 	
 		//Position Elbow Joint
-		modelViewMatrix = mult(modelViewMatrix, translate(1.0, 0.0, 0.0));
-		//Elbow Joint
-		modelViewMatrix = mult(modelViewMatrix, rotate(elbow,vec3(0,0,1)));
-		//Position Forearm Cube
-		modelViewMatrix = mult(modelViewMatrix, translate(1, 0.0, 0.0));
-		//Scale and Draw Forearm
-		matStack.push(modelViewMatrix);
-			modelViewMatrix = mult(modelViewMatrix, scalem(2.0, 0.4, 1.0));
-			gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
-			gl.drawArrays(armShape.type, armShape.start, armShape.size);
-		//Undo Scale
-		modelViewMatrix = matStack.pop();
+      modelViewMatrix = mult(modelViewMatrix, translate(1.0, 0.0, 0.0));
+      //Elbow Joint
+      modelViewMatrix = mult(modelViewMatrix, rotate(elbow,vec3(0,0,1)));
+      //Position Forearm Cube
+      modelViewMatrix = mult(modelViewMatrix, translate(1, 0.0, 0.0));
+      //Scale and Draw Forearm
+      matStack.push(modelViewMatrix);
+         modelViewMatrix = mult(modelViewMatrix, scalem(2.0, 0.4, 1.0));
+         gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+         gl.drawArrays(armShape.type, armShape.start, armShape.size);
+      //Undo Scale
+      modelViewMatrix = matStack.pop();
 
-    //Restore modelViewMatrix to initial state
-	modelViewMatrix = matStack.pop();
-	
+   // Move to the wrist
+   modelViewMatrix = mult(modelViewMatrix, translate(1.0, 0.0, 0.0));
+
+   // Draw the thumb
+   matStack.push(modelViewMatrix);
+      //rotate down
+      modelViewMatrix = mult(modelViewMatrix, rotate(-fingerAngle, vec3(0,0,1)));
+      modelViewMatrix = mult(modelViewMatrix, translate(0.4, -0.2, 0.0)); 
+         
+      matStack.push(modelViewMatrix);
+         modelViewMatrix = mult(modelViewMatrix, scalem(0.8, 0.15, 0.2));
+         gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
+         gl.drawArrays(armShape.type, armShape.start, armShape.size);
+      modelViewMatrix = matStack.pop();
+   modelViewMatrix = matStack.pop();
+
+   // Draw 3 Fingers
+   var fingerZPositions = [-0.3, 0.0, 0.3];
+   
+   for (var i = 0; i < 3; i++) {
+      matStack.push(modelViewMatrix); // Save wrist state for each finger
+         //rotate up
+         modelViewMatrix = mult(modelViewMatrix, rotate(fingerAngle, vec3(0,0,1)));
+         modelViewMatrix = mult(modelViewMatrix, translate(0.4, 0.2, fingerZPositions[i]));
+         
+         //draw fingers
+         matStack.push(modelViewMatrix); 
+            modelViewMatrix = mult(modelViewMatrix, scalem(0.8, 0.15, 0.2));
+            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
+            gl.drawArrays(armShape.type, armShape.start, armShape.size);
+         modelViewMatrix = matStack.pop(); 
+      modelViewMatrix = matStack.pop();
+   }
+
+   modelViewMatrix = matStack.pop();
 }
 
 
@@ -342,5 +379,17 @@ function handleKeys(timePassed)
    {
       if (elbow > -144) elbow = (elbow - d);
       else elbow = -144;
+   }
+
+   //finger moves
+   if (shift && isPressed("F")) 
+   {
+      if (fingerAngle > 0) fingerAngle = (fingerAngle - d);
+      else fingerAngle = 0;
+   }
+   if (!shift && isPressed("F")) 
+   {
+      if (fingerAngle < 45) fingerAngle = (fingerAngle + d);
+      else fingerAngle = 45;
    }
 }
